@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prop Trading Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 Prop Trading Dashboard</h1>
+            <p class="subtitle">Daily Goals & Account Tracker</p>
+        </header>
+
+        <section class="daily-goals">
+            <h2>📋 Today's Tasks</h2>
+            <div id="daily-tasks" class="task-list"></div>
+        </section>
+
+        <section class="accounts">
+            <h2>💼 My Accounts</h2>
+            <div class="accounts-grid">
+                <div class="account-card apex">
+                    <h3>Apex 50K Accounts</h3>
+                    <div class="account-count">
+                        <span id="apex-passed">3</span> Passed
+                    </div>
+                    <div class="account-details" id="apex-accounts"></div>
+                    <button onclick="addAccount('apex')">+ Add Account</button>
+                </div>
+                <div class="account-card lucid">
+                    <h3>Lucid Flex 50K</h3>
+                    <div class="account-count">
+                        <span id="lucid-passed">1</span> Passed
+                    </div>
+                    <div class="account-details" id="lucid-accounts"></div>
+                    <button onclick="addAccount('lucid')">+ Add Account</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="daily-strategy">
+            <h2>🚀 Daily Strategy</h2>
+            <div class="strategy-card">
+                <div class="strategy-item">
+                    <span class="icon">💰</span>
+                    <div class="strategy-content">
+                        <h4>Buy New Eval (Apex Discount)</h4>
+                        <p>Cost: ~$20 | Use the crazy discount!</p>
+                        <input type="checkbox" id="bought-apex-eval">
+                        <label for="bought-apex-eval">Done today</label>
+                    </div>
+                </div>
+                <div class="strategy-item">
+                    <span class="icon">💎</span>
+                    <div class="strategy-content">
+                        <h4>Buy Lucid Flex Eval</h4>
+                        <p>Cost: ~$80 | Higher value account</p>
+                        <input type="checkbox" id="bought-lucid-eval">
+                        <label for="bought-lucid-eval">Done today</label>
+                    </div>
+                </div>
+                <div class="strategy-item">
+                    <span class="icon">📈</span>
+                    <div class="strategy-content">
+                        <h4>Full Part at Open</h4>
+                        <p>Execute your edge with full position</p>
+                        <input type="checkbox" id="traded-open">
+                        <label for="traded-open">Done today</label>
+                    </div>
+                </div>
+                <div class="strategy-item">
+                    <span class="icon">🎯</span>
+                    <div class="strategy-content">
+                        <h4>Pass At Least 1 Account</h4>
+                        <p>Daily minimum goal</p>
+                        <input type="number" id="accounts-passed-today" min="0" value="0" style="width: 60px;">
+                        <label>accounts passed</label>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="stats">
+            <h2>📊 Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h4>Total Passed Accounts</h4>
+                    <span id="total-passed" class="stat-number">4</span>
+                </div>
+                <div class="stat-card">
+                    <h4>Monthly Investment</h4>
+                    <span id="monthly-investment" class="stat-number">$0</span>
+                </div>
+                <div class="stat-card">
+                    <h4>Potential Payouts</h4>
+                    <span id="potential-payouts" class="stat-number">$0</span>
+                </div>
+                <div class="stat-card">
+                    <h4>Pass Rate</h4>
+                    <span id="pass-rate" class="stat-number">0%</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="history">
+            <h2>📅 Daily Log</h2>
+            <div id="daily-log" class="log-container"></div>
+            <button onclick="saveDay()" class="save-btn">Save Today's Progress</button>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
