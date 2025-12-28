@@ -82,6 +82,72 @@
             </div>
         </section>
 
+        <section class="settings">
+            <h2>⚙️ Settings</h2>
+            <div class="settings-card">
+                <div class="settings-grid">
+                    <div class="setting-item">
+                        <label>Apex Eval Cost ($)</label>
+                        <input type="number" id="cost-apex-eval" step="0.01" onchange="updateCost('apexEval', this.value)">
+                    </div>
+                    <div class="setting-item">
+                        <label>Apex Activation Fee ($)</label>
+                        <input type="number" id="cost-apex-activation" step="0.01" onchange="updateCost('apexActivation', this.value)">
+                    </div>
+                    <div class="setting-item">
+                        <label>Lucid Eval Cost ($)</label>
+                        <input type="number" id="cost-lucid-eval" step="0.01" onchange="updateCost('lucidEval', this.value)">
+                    </div>
+                    <div class="setting-item">
+                        <label>Est. Payout per Account ($)</label>
+                        <input type="number" id="cost-payout-estimate" step="100" onchange="updateCost('payoutEstimate', this.value)">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="money-tracker">
+            <h2>💵 Money Tracker</h2>
+            <div class="money-grid">
+                <div class="money-card spent">
+                    <h4>Total Spent</h4>
+                    <span id="total-spent" class="money-number">$0</span>
+                </div>
+                <div class="money-card apex-spent">
+                    <h4>Apex Evals</h4>
+                    <span id="apex-spent" class="money-number">$0</span>
+                    <small id="apex-eval-count">0 evals</small>
+                </div>
+                <div class="money-card lucid-spent">
+                    <h4>Lucid Evals</h4>
+                    <span id="lucid-spent" class="money-number">$0</span>
+                    <small id="lucid-eval-count">0 evals</small>
+                </div>
+                <div class="money-card roi">
+                    <h4>Potential ROI</h4>
+                    <span id="potential-roi" class="money-number">0%</span>
+                </div>
+            </div>
+            <div class="add-expense">
+                <h4>Add Expense</h4>
+                <div class="expense-form">
+                    <select id="expense-type">
+                        <option value="apex">Apex Eval</option>
+                        <option value="apex-activation">Apex Activation Fee</option>
+                        <option value="lucid">Lucid Flex Eval</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <input type="number" id="expense-amount" placeholder="Amount" step="0.01">
+                    <input type="text" id="expense-note" placeholder="Note (optional)">
+                    <button onclick="addExpense()">Add</button>
+                </div>
+            </div>
+            <div class="expense-history">
+                <h4>Recent Expenses</h4>
+                <div id="expense-list"></div>
+            </div>
+        </section>
+
         <section class="stats">
             <h2>📊 Statistics</h2>
             <div class="stats-grid">
@@ -90,7 +156,7 @@
                     <span id="total-passed" class="stat-number">4</span>
                 </div>
                 <div class="stat-card">
-                    <h4>Monthly Investment</h4>
+                    <h4>This Month Spent</h4>
                     <span id="monthly-investment" class="stat-number">$0</span>
                 </div>
                 <div class="stat-card">

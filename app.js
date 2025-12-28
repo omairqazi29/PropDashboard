@@ -12,6 +12,7 @@ const state = {
             { id: 1, name: 'Lucid Flex 50K #1', status: 'passed', passedDate: '2024-12-24' }
         ]
     },
+    expenses: [],
     dailyLog: [],
     stats: {
         totalEvalsBought: 0,
@@ -20,8 +21,10 @@ const state = {
         monthlySpent: 0
     },
     costs: {
-        apexEval: 20,
-        lucidEval: 80
+        apexEval: 25,
+        apexActivation: 65,
+        lucidEval: 80,
+        payoutEstimate: 2000
     }
 };
 
@@ -31,8 +34,32 @@ function loadState() {
     if (saved) {
         const parsed = JSON.parse(saved);
         Object.assign(state, parsed);
+        // Ensure expenses array exists for older saves
+        if (!state.expenses) state.expenses = [];
+        // Ensure new cost fields exist
+        if (!state.costs.apexActivation) state.costs.apexActivation = 65;
+        if (!state.costs.payoutEstimate) state.costs.payoutEstimate = 2000;
     }
+    renderSettings();
     render();
+}
+
+// Render settings inputs
+function renderSettings() {
+    document.getElementById('cost-apex-eval').value = state.costs.apexEval;
+    document.getElementById('cost-apex-activation').value = state.costs.apexActivation;
+    document.getElementById('cost-lucid-eval').value = state.costs.lucidEval;
+    document.getElementById('cost-payout-estimate').value = state.costs.payoutEstimate;
+}
+
+// Update cost setting
+function updateCost(key, value) {
+    const num = parseFloat(value);
+    if (!isNaN(num) && num >= 0) {
+        state.costs[key] = num;
+        saveState();
+        render();
+    }
 }
 
 // Save state to localStorage
@@ -42,8 +69,6 @@ function saveState() {
 
 // Generate daily tasks based on goals
 function generateDailyTasks() {
-    const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
-
     const tasks = [
         {
             id: 1,
@@ -117,20 +142,163 @@ function renderAccounts() {
     document.getElementById('lucid-passed').textContent = state.accounts.lucid.filter(a => a.status === 'passed').length;
 }
 
+// Calculate money stats
+function calculateMoneyStats() {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    let totalSpent = 0;
+    let apexSpent = 0;
+    let lucidSpent = 0;
+    let apexCount = 0;
+    let lucidCount = 0;
+    let monthlySpent = 0;
+
+    state.expenses.forEach(expense => {
+        const expenseDate = new Date(expense.date);
+        totalSpent += expense.amount;
+
+        if (expense.type === 'apex') {
+            apexSpent += expense.amount;
+            apexCount++;
+        } else if (expense.type === 'lucid') {
+            lucidSpent += expense.amount;
+            lucidCount++;
+        }
+
+        // Check if expense is from current month
+        if (expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear) {
+            monthlySpent += expense.amount;
+        }
+    });
+
+    return { totalSpent, apexSpent, lucidSpent, apexCount, lucidCount, monthlySpent };
+}
+
+// Render money tracker
+function renderMoneyTracker() {
+    const stats = calculateMoneyStats();
+
+    document.getElementById('total-spent').textContent = `$${stats.totalSpent.toFixed(2)}`;
+    document.getElementById('apex-spent').textContent = `$${stats.apexSpent.toFixed(2)}`;
+    document.getElementById('apex-eval-count').textContent = `${stats.apexCount} evals`;
+    document.getElementById('lucid-spent').textContent = `$${stats.lucidSpent.toFixed(2)}`;
+    document.getElementById('lucid-eval-count').textContent = `${stats.lucidCount} evals`;
+
+    // Calculate potential ROI
+    const totalPassed = state.accounts.apex.filter(a => a.status === 'passed').length +
+                        state.accounts.lucid.filter(a => a.status === 'passed').length;
+    const potentialPayouts = totalPassed * state.costs.payoutEstimate;
+    const roi = stats.totalSpent > 0 ? ((potentialPayouts - stats.totalSpent) / stats.totalSpent * 100) : 0;
+    document.getElementById('potential-roi').textContent = `${roi.toFixed(0)}%`;
+
+    // Render expense list
+    renderExpenseList();
+}
+
+// Render expense list
+function renderExpenseList() {
+    const container = document.getElementById('expense-list');
+
+    if (state.expenses.length === 0) {
+        container.innerHTML = '<p style="color: #666; text-align: center;">No expenses recorded yet</p>';
+        return;
+    }
+
+    // Show last 10 expenses, newest first
+    const recentExpenses = state.expenses.slice(-10).reverse();
+
+    container.innerHTML = recentExpenses.map((expense, idx) => {
+        const realIndex = state.expenses.length - 1 - idx;
+        const typeLabel = expense.type === 'apex' ? 'Apex Eval' :
+                         expense.type === 'apex-activation' ? 'Apex Activation' :
+                         expense.type === 'lucid' ? 'Lucid Flex' : 'Other';
+        const date = new Date(expense.date).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        });
+
+        return `
+            <div class="expense-item">
+                <div class="expense-info">
+                    <span class="expense-type">${typeLabel}</span>
+                    <span class="expense-date">${date}</span>
+                    ${expense.note ? `<span class="expense-note">${expense.note}</span>` : ''}
+                </div>
+                <span class="expense-amount">-$${expense.amount.toFixed(2)}</span>
+                <button class="delete-btn" onclick="deleteExpense(${realIndex})">×</button>
+            </div>
+        `;
+    }).join('');
+}
+
+// Add expense
+function addExpense() {
+    const typeSelect = document.getElementById('expense-type');
+    const amountInput = document.getElementById('expense-amount');
+    const noteInput = document.getElementById('expense-note');
+
+    const type = typeSelect.value;
+    let amount = parseFloat(amountInput.value);
+
+    // Auto-fill amount based on type if not specified
+    if (!amount || isNaN(amount)) {
+        if (type === 'apex') amount = state.costs.apexEval;
+        else if (type === 'apex-activation') amount = state.costs.apexActivation;
+        else if (type === 'lucid') amount = state.costs.lucidEval;
+        else {
+            alert('Please enter an amount for "Other" expenses');
+            return;
+        }
+    }
+
+    const expense = {
+        id: Date.now(),
+        type: type,
+        amount: amount,
+        note: noteInput.value.trim(),
+        date: new Date().toISOString()
+    };
+
+    state.expenses.push(expense);
+    state.stats.totalEvalsBought++;
+
+    // Clear form
+    amountInput.value = '';
+    noteInput.value = '';
+    typeSelect.value = 'apex';
+
+    saveState();
+    render();
+}
+
+// Delete expense
+function deleteExpense(index) {
+    if (confirm('Delete this expense?')) {
+        state.expenses.splice(index, 1);
+        saveState();
+        render();
+    }
+}
+
 // Render statistics
 function renderStats() {
     const totalPassed = state.accounts.apex.filter(a => a.status === 'passed').length +
                         state.accounts.lucid.filter(a => a.status === 'passed').length;
 
-    document.getElementById('total-passed').textContent = totalPassed;
-    document.getElementById('monthly-investment').textContent = `$${state.stats.monthlySpent}`;
+    const moneyStats = calculateMoneyStats();
 
-    // Estimate potential payouts (rough estimate: $2000 per passed account first payout)
-    const potentialPayouts = totalPassed * 2000;
+    document.getElementById('total-passed').textContent = totalPassed;
+    document.getElementById('monthly-investment').textContent = `$${moneyStats.monthlySpent.toFixed(2)}`;
+
+    // Estimate potential payouts
+    const potentialPayouts = totalPassed * state.costs.payoutEstimate;
     document.getElementById('potential-payouts').textContent = `$${potentialPayouts.toLocaleString()}`;
 
     // Calculate pass rate
-    const totalAttempts = state.stats.totalEvalsBought || totalPassed;
+    const totalAttempts = state.expenses.filter(e => e.type === 'apex' || e.type === 'lucid').length || totalPassed;
     const passRate = totalAttempts > 0 ? Math.round((totalPassed / totalAttempts) * 100) : 0;
     document.getElementById('pass-rate').textContent = `${passRate}%`;
 }
@@ -176,7 +344,6 @@ function addAccount(type) {
 
 // Toggle task completion
 function toggleTask(taskId) {
-    // Tasks are generated fresh, so we just re-render
     renderDailyTasks();
 }
 
@@ -189,22 +356,35 @@ function saveDay() {
         year: 'numeric'
     });
 
+    const boughtApex = document.getElementById('bought-apex-eval').checked;
+    const boughtLucid = document.getElementById('bought-lucid-eval').checked;
+
     const entry = {
         date: today,
-        boughtApex: document.getElementById('bought-apex-eval').checked,
-        boughtLucid: document.getElementById('bought-lucid-eval').checked,
+        boughtApex: boughtApex,
+        boughtLucid: boughtLucid,
         tradedOpen: document.getElementById('traded-open').checked,
         accountsPassed: parseInt(document.getElementById('accounts-passed-today').value) || 0
     };
 
-    // Update stats
-    if (entry.boughtApex) {
-        state.stats.monthlySpent += state.costs.apexEval;
-        state.stats.totalEvalsBought++;
+    // Auto-add expenses if checked
+    if (boughtApex) {
+        state.expenses.push({
+            id: Date.now(),
+            type: 'apex',
+            amount: state.costs.apexEval,
+            note: 'Daily Apex eval',
+            date: new Date().toISOString()
+        });
     }
-    if (entry.boughtLucid) {
-        state.stats.monthlySpent += state.costs.lucidEval;
-        state.stats.totalEvalsBought++;
+    if (boughtLucid) {
+        state.expenses.push({
+            id: Date.now() + 1,
+            type: 'lucid',
+            amount: state.costs.lucidEval,
+            note: 'Daily Lucid eval',
+            date: new Date().toISOString()
+        });
     }
 
     // Add to log
@@ -226,6 +406,7 @@ function saveDay() {
 function render() {
     renderDailyTasks();
     renderAccounts();
+    renderMoneyTracker();
     renderStats();
     renderDailyLog();
 }

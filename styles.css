@@ -293,6 +293,226 @@ section h2 {
     border-radius: 4px;
 }
 
+/* Settings */
+.settings-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    padding: 20px;
+}
+
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+}
+
+.setting-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.setting-item label {
+    color: #888;
+    font-size: 0.85rem;
+}
+
+.setting-item input {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.setting-item input:focus {
+    outline: none;
+    border-color: #00d4ff;
+}
+
+/* Money Tracker */
+.money-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.money-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    padding: 20px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.money-card h4 {
+    color: #888;
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+}
+
+.money-card small {
+    display: block;
+    color: #666;
+    margin-top: 5px;
+}
+
+.money-number {
+    font-size: 1.8rem;
+    font-weight: bold;
+}
+
+.money-card.spent .money-number {
+    color: #ff4757;
+}
+
+.money-card.apex-spent {
+    border-left: 3px solid #ff6b35;
+}
+
+.money-card.apex-spent .money-number {
+    color: #ff6b35;
+}
+
+.money-card.lucid-spent {
+    border-left: 3px solid #7b2cbf;
+}
+
+.money-card.lucid-spent .money-number {
+    color: #7b2cbf;
+}
+
+.money-card.roi .money-number {
+    color: #2ed573;
+}
+
+.add-expense {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.add-expense h4 {
+    margin-bottom: 15px;
+    color: #00d4ff;
+}
+
+.expense-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.expense-form select,
+.expense-form input {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.expense-form select {
+    min-width: 150px;
+}
+
+.expense-form input[type="number"] {
+    width: 100px;
+}
+
+.expense-form input[type="text"] {
+    flex: 1;
+    min-width: 150px;
+}
+
+.expense-form button {
+    background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+    border: none;
+    color: #fff;
+    padding: 10px 25px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: transform 0.2s;
+}
+
+.expense-form button:hover {
+    transform: scale(1.05);
+}
+
+.expense-history {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    padding: 20px;
+}
+
+.expense-history h4 {
+    margin-bottom: 15px;
+    color: #00d4ff;
+}
+
+#expense-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.expense-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.expense-item:last-child {
+    border-bottom: none;
+}
+
+.expense-item .expense-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.expense-item .expense-type {
+    font-weight: bold;
+    color: #fff;
+}
+
+.expense-item .expense-date {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.expense-item .expense-note {
+    font-size: 0.85rem;
+    color: #888;
+}
+
+.expense-item .expense-amount {
+    font-weight: bold;
+    color: #ff4757;
+}
+
+.expense-item .delete-btn {
+    background: rgba(255, 71, 87, 0.2);
+    border: none;
+    color: #ff4757;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 10px;
+    font-size: 0.8rem;
+}
+
+.expense-item .delete-btn:hover {
+    background: rgba(255, 71, 87, 0.4);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     header h1 {
@@ -305,5 +525,15 @@ section h2 {
 
     .strategy-item .icon {
         margin-bottom: 10px;
+    }
+
+    .expense-form {
+        flex-direction: column;
+    }
+
+    .expense-form select,
+    .expense-form input,
+    .expense-form button {
+        width: 100%;
     }
 }
