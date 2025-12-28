@@ -20,7 +20,12 @@ const state = {
         { id: 4, type: 'apex-activation', amount: 65, note: 'Apex 50K #2 activation', date: '2024-12-22T10:00:00.000Z' },
         { id: 5, type: 'apex', amount: 25, note: 'Apex 50K #3 eval', date: '2024-12-25T10:00:00.000Z' },
         { id: 6, type: 'apex-activation', amount: 65, note: 'Apex 50K #3 activation', date: '2024-12-25T10:00:00.000Z' },
-        { id: 7, type: 'lucid', amount: 80, note: 'Lucid Flex 50K #1 eval', date: '2024-12-24T10:00:00.000Z' }
+        { id: 7, type: 'lucid', amount: 80, note: 'Lucid Flex 50K #1 eval (passed)', date: '2024-12-24T10:00:00.000Z' },
+        // Failed evals during the journey
+        { id: 8, type: 'lucid', amount: 80, note: 'Lucid eval - failed', date: '2024-12-18T10:00:00.000Z' },
+        { id: 9, type: 'lucid', amount: 80, note: 'Lucid eval - failed', date: '2024-12-19T10:00:00.000Z' },
+        { id: 10, type: 'lucid', amount: 80, note: 'Lucid eval - failed', date: '2024-12-21T10:00:00.000Z' },
+        { id: 11, type: 'apex', amount: 25, note: 'Apex eval - failed', date: '2024-12-23T10:00:00.000Z' }
     ],
     dailyLog: [],
     stats: {
