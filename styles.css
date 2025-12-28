@@ -521,6 +521,139 @@ section h2 {
     background: rgba(255, 71, 87, 0.4);
 }
 
+/* Simulator */
+.simulator-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    padding: 25px;
+}
+
+.simulator-inputs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: flex-end;
+    margin-bottom: 25px;
+}
+
+.sim-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sim-input-group label {
+    color: #888;
+    font-size: 0.85rem;
+}
+
+.sim-input-group input {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 1rem;
+    min-width: 150px;
+}
+
+.sim-input-group input:focus {
+    outline: none;
+    border-color: #00d4ff;
+}
+
+.sim-btn {
+    background: linear-gradient(90deg, #7b2cbf, #00d4ff);
+    border: none;
+    color: #fff;
+    padding: 12px 25px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.sim-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 20px rgba(123, 44, 191, 0.4);
+}
+
+.simulator-results {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.sim-results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.sim-result-item {
+    text-align: center;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+
+.sim-result-item h4 {
+    color: #888;
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+}
+
+.sim-result-item .value {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.sim-result-item .value.green {
+    color: #2ed573;
+}
+
+.sim-result-item .value.orange {
+    color: #ffa502;
+}
+
+.sim-result-item .value.red {
+    color: #ff4757;
+}
+
+.sim-result-item .value.blue {
+    color: #00d4ff;
+}
+
+.sim-result-item .value.purple {
+    color: #7b2cbf;
+}
+
+.sim-breakdown {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sim-breakdown h4 {
+    color: #00d4ff;
+    margin-bottom: 10px;
+}
+
+.sim-breakdown-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sim-breakdown-row:last-child {
+    border-bottom: none;
+    font-weight: bold;
+    color: #2ed573;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     header h1 {

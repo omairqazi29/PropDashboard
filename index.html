@@ -153,6 +153,30 @@
             </div>
         </section>
 
+        <section class="simulator">
+            <h2>🔮 Projections Simulator</h2>
+            <div class="simulator-card">
+                <div class="simulator-inputs">
+                    <div class="sim-input-group">
+                        <label>Target Date</label>
+                        <input type="date" id="sim-target-date">
+                    </div>
+                    <div class="sim-input-group">
+                        <label>Pass Rate (%)</label>
+                        <input type="number" id="sim-pass-rate" value="50" min="0" max="100">
+                    </div>
+                    <div class="sim-input-group">
+                        <label>Payout per Account ($)</label>
+                        <input type="number" id="sim-payout" value="500" step="100">
+                    </div>
+                    <button onclick="runSimulation()" class="sim-btn">Run Simulation</button>
+                </div>
+                <div class="simulator-results" id="sim-results">
+                    <p style="color: #666; text-align: center;">Set a target date and run simulation</p>
+                </div>
+            </div>
+        </section>
+
         <section class="stats">
             <h2>📊 Statistics</h2>
             <div class="stats-grid">

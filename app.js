@@ -423,6 +423,169 @@ function saveDay() {
     alert('Day saved! Keep grinding! 💪');
 }
 
+// Get market open days (weekdays, excluding major US holidays)
+function getMarketDays(startDate, endDate) {
+    const holidays2025 = [
+        '2025-01-01', // New Year's Day
+        '2025-01-20', // MLK Day
+        '2025-02-17', // Presidents Day
+        '2025-04-18', // Good Friday
+        '2025-05-26', // Memorial Day
+        '2025-06-19', // Juneteenth
+        '2025-07-04', // Independence Day
+        '2025-09-01', // Labor Day
+        '2025-11-27', // Thanksgiving
+        '2025-12-25'  // Christmas
+    ];
+
+    let marketDays = 0;
+    const current = new Date(startDate);
+    const end = new Date(endDate);
+
+    while (current <= end) {
+        const dayOfWeek = current.getDay();
+        const dateStr = current.toISOString().split('T')[0];
+
+        // Check if weekday and not a holiday
+        if (dayOfWeek !== 0 && dayOfWeek !== 6 && !holidays2025.includes(dateStr)) {
+            marketDays++;
+        }
+
+        current.setDate(current.getDate() + 1);
+    }
+
+    return marketDays;
+}
+
+// Run projection simulation
+function runSimulation() {
+    const targetDateInput = document.getElementById('sim-target-date').value;
+    const passRate = parseFloat(document.getElementById('sim-pass-rate').value) / 100;
+    const payoutPerAccount = parseFloat(document.getElementById('sim-payout').value);
+
+    if (!targetDateInput) {
+        alert('Please select a target date');
+        return;
+    }
+
+    const today = new Date();
+    const targetDate = new Date(targetDateInput);
+
+    if (targetDate <= today) {
+        alert('Target date must be in the future');
+        return;
+    }
+
+    // Calculate market days from today to target
+    const marketDays = getMarketDays(today, targetDate);
+
+    // Current accounts
+    const currentApexPassed = state.accounts.apex.filter(a => a.status === 'passed').length;
+    const currentLucidPassed = state.accounts.lucid.filter(a => a.status === 'passed').length;
+    const currentTotalPassed = currentApexPassed + currentLucidPassed;
+
+    // Daily strategy: 1 Apex eval + 1 Lucid eval per market day
+    const apexEvalsBought = marketDays;
+    const lucidEvalsBought = marketDays;
+
+    // Calculate new accounts passed based on pass rate
+    const newApexPassed = Math.floor(apexEvalsBought * passRate);
+    const newLucidPassed = Math.floor(lucidEvalsBought * passRate);
+    const totalNewPassed = newApexPassed + newLucidPassed;
+
+    // Calculate expenses
+    const apexEvalCost = apexEvalsBought * state.costs.apexEval;
+    const lucidEvalCost = lucidEvalsBought * state.costs.lucidEval;
+    const activationCost = newApexPassed * state.costs.apexActivation; // Only Apex needs activation
+    const totalNewExpenses = apexEvalCost + lucidEvalCost + activationCost;
+
+    // Current expenses
+    const currentStats = calculateMoneyStats();
+    const totalExpenses = currentStats.totalSpent + totalNewExpenses;
+
+    // Total accounts by target date
+    const projectedApexPassed = currentApexPassed + newApexPassed;
+    const projectedLucidPassed = currentLucidPassed + newLucidPassed;
+    const projectedTotalPassed = currentTotalPassed + totalNewPassed;
+
+    // Calculate payouts (assuming all passed accounts get payout)
+    const totalPayouts = projectedTotalPassed * payoutPerAccount;
+    const netProfit = totalPayouts - totalExpenses;
+
+    // Render results
+    const resultsContainer = document.getElementById('sim-results');
+    resultsContainer.innerHTML = `
+        <div class="sim-results-grid">
+            <div class="sim-result-item">
+                <h4>Market Days</h4>
+                <span class="value blue">${marketDays}</span>
+            </div>
+            <div class="sim-result-item">
+                <h4>New Accounts Passed</h4>
+                <span class="value green">+${totalNewPassed}</span>
+            </div>
+            <div class="sim-result-item">
+                <h4>Total Passed by ${targetDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</h4>
+                <span class="value purple">${projectedTotalPassed}</span>
+            </div>
+            <div class="sim-result-item">
+                <h4>Total Expenses</h4>
+                <span class="value red">$${totalExpenses.toLocaleString()}</span>
+            </div>
+            <div class="sim-result-item">
+                <h4>Total Payouts</h4>
+                <span class="value green">$${totalPayouts.toLocaleString()}</span>
+            </div>
+            <div class="sim-result-item">
+                <h4>Net Profit</h4>
+                <span class="value ${netProfit >= 0 ? 'green' : 'red'}">$${netProfit.toLocaleString()}</span>
+            </div>
+        </div>
+        <div class="sim-breakdown">
+            <h4>Expense Breakdown (New)</h4>
+            <div class="sim-breakdown-row">
+                <span>Apex Evals (${apexEvalsBought} × $${state.costs.apexEval})</span>
+                <span>$${apexEvalCost.toLocaleString()}</span>
+            </div>
+            <div class="sim-breakdown-row">
+                <span>Lucid Evals (${lucidEvalsBought} × $${state.costs.lucidEval})</span>
+                <span>$${lucidEvalCost.toLocaleString()}</span>
+            </div>
+            <div class="sim-breakdown-row">
+                <span>Apex Activations (${newApexPassed} × $${state.costs.apexActivation})</span>
+                <span>$${activationCost.toLocaleString()}</span>
+            </div>
+            <div class="sim-breakdown-row">
+                <span>New Expenses Total</span>
+                <span>$${totalNewExpenses.toLocaleString()}</span>
+            </div>
+        </div>
+        <div class="sim-breakdown">
+            <h4>Account Projections</h4>
+            <div class="sim-breakdown-row">
+                <span>Apex Accounts (current + new)</span>
+                <span>${currentApexPassed} + ${newApexPassed} = ${projectedApexPassed}</span>
+            </div>
+            <div class="sim-breakdown-row">
+                <span>Lucid Accounts (current + new)</span>
+                <span>${currentLucidPassed} + ${newLucidPassed} = ${projectedLucidPassed}</span>
+            </div>
+            <div class="sim-breakdown-row">
+                <span>Total Passed Accounts</span>
+                <span>${projectedTotalPassed}</span>
+            </div>
+        </div>
+    `;
+}
+
+// Set default simulation date to end of February 2025
+function initSimulator() {
+    const simDateInput = document.getElementById('sim-target-date');
+    if (simDateInput) {
+        simDateInput.value = '2025-02-28';
+    }
+}
+
 // Main render function
 function render() {
     renderDailyTasks();
@@ -433,4 +596,7 @@ function render() {
 }
 
 // Initialize
-document.addEventListener('DOMContentLoaded', loadState);
+document.addEventListener('DOMContentLoaded', () => {
+    loadState();
+    initSimulator();
+});
