@@ -376,6 +376,14 @@ section h2 {
     color: #ff6b35;
 }
 
+.money-card.activation-spent {
+    border-left: 3px solid #ffa502;
+}
+
+.money-card.activation-spent .money-number {
+    color: #ffa502;
+}
+
 .money-card.lucid-spent {
     border-left: 3px solid #7b2cbf;
 }

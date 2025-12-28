@@ -12,7 +12,16 @@ const state = {
             { id: 1, name: 'Lucid Flex 50K #1', status: 'passed', passedDate: '2024-12-24' }
         ]
     },
-    expenses: [],
+    expenses: [
+        // Initial expenses for passed accounts
+        { id: 1, type: 'apex', amount: 25, note: 'Apex 50K #1 eval', date: '2024-12-20T10:00:00.000Z' },
+        { id: 2, type: 'apex-activation', amount: 65, note: 'Apex 50K #1 activation', date: '2024-12-20T10:00:00.000Z' },
+        { id: 3, type: 'apex', amount: 25, note: 'Apex 50K #2 eval', date: '2024-12-22T10:00:00.000Z' },
+        { id: 4, type: 'apex-activation', amount: 65, note: 'Apex 50K #2 activation', date: '2024-12-22T10:00:00.000Z' },
+        { id: 5, type: 'apex', amount: 25, note: 'Apex 50K #3 eval', date: '2024-12-25T10:00:00.000Z' },
+        { id: 6, type: 'apex-activation', amount: 65, note: 'Apex 50K #3 activation', date: '2024-12-25T10:00:00.000Z' },
+        { id: 7, type: 'lucid', amount: 80, note: 'Lucid Flex 50K #1 eval', date: '2024-12-24T10:00:00.000Z' }
+    ],
     dailyLog: [],
     stats: {
         totalEvalsBought: 0,
@@ -153,6 +162,8 @@ function calculateMoneyStats() {
     let lucidSpent = 0;
     let apexCount = 0;
     let lucidCount = 0;
+    let activationSpent = 0;
+    let activationCount = 0;
     let monthlySpent = 0;
 
     state.expenses.forEach(expense => {
@@ -162,6 +173,9 @@ function calculateMoneyStats() {
         if (expense.type === 'apex') {
             apexSpent += expense.amount;
             apexCount++;
+        } else if (expense.type === 'apex-activation') {
+            activationSpent += expense.amount;
+            activationCount++;
         } else if (expense.type === 'lucid') {
             lucidSpent += expense.amount;
             lucidCount++;
@@ -173,7 +187,7 @@ function calculateMoneyStats() {
         }
     });
 
-    return { totalSpent, apexSpent, lucidSpent, apexCount, lucidCount, monthlySpent };
+    return { totalSpent, apexSpent, lucidSpent, apexCount, lucidCount, activationSpent, activationCount, monthlySpent };
 }
 
 // Render money tracker
@@ -183,6 +197,8 @@ function renderMoneyTracker() {
     document.getElementById('total-spent').textContent = `$${stats.totalSpent.toFixed(2)}`;
     document.getElementById('apex-spent').textContent = `$${stats.apexSpent.toFixed(2)}`;
     document.getElementById('apex-eval-count').textContent = `${stats.apexCount} evals`;
+    document.getElementById('activation-spent').textContent = `$${stats.activationSpent.toFixed(2)}`;
+    document.getElementById('activation-count').textContent = `${stats.activationCount} accounts`;
     document.getElementById('lucid-spent').textContent = `$${stats.lucidSpent.toFixed(2)}`;
     document.getElementById('lucid-eval-count').textContent = `${stats.lucidCount} evals`;
 
