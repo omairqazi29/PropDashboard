@@ -346,9 +346,23 @@ function renderDailyLog() {
     `).join('');
 }
 
+// Account limits
+const ACCOUNT_LIMITS = {
+    apex: 20,
+    lucid: 5
+};
+
 // Add new account
 function addAccount(type) {
     const accounts = state.accounts[type];
+    const limit = ACCOUNT_LIMITS[type];
+    const passedCount = accounts.filter(a => a.status === 'passed').length;
+
+    if (passedCount >= limit) {
+        alert(`Max ${limit} ${type === 'apex' ? 'Apex' : 'Lucid'} funded accounts reached!`);
+        return;
+    }
+
     const newId = accounts.length + 1;
     const name = type === 'apex' ? `Apex 50K #${newId}` : `Lucid Flex 50K #${newId}`;
 
@@ -532,7 +546,8 @@ function renderCalendar() {
                     cumulativeExpenses += passRate * state.costs.apexActivation;
                 }
 
-                const totalAccounts = currentTotalPassed + Math.floor(cumulativeNewPassed);
+                const maxAccounts = ACCOUNT_LIMITS.apex + ACCOUNT_LIMITS.lucid;
+                const totalAccounts = Math.min(currentTotalPassed + Math.floor(cumulativeNewPassed), maxAccounts);
                 const totalPayout = totalAccounts * payoutPerAccount;
 
                 calendarHTML += `
@@ -575,7 +590,8 @@ function renderCalendar() {
     const totalNewPassed = Math.floor(totalMarketDays * 2 * passRate);
     const totalNewApex = Math.floor(totalMarketDays * passRate);
     const totalNewExpenses = totalMarketDays * (state.costs.apexEval + state.costs.lucidEval) + totalNewApex * state.costs.apexActivation;
-    const finalTotalAccounts = currentTotalPassed + totalNewPassed;
+    const maxAccounts = ACCOUNT_LIMITS.apex + ACCOUNT_LIMITS.lucid;
+    const finalTotalAccounts = Math.min(currentTotalPassed + totalNewPassed, maxAccounts);
     const finalTotalExpenses = currentStats.totalSpent + totalNewExpenses;
     const finalPayout = finalTotalAccounts * payoutPerAccount;
     const netProfit = finalPayout - finalTotalExpenses;

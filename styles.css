@@ -284,6 +284,12 @@ section h2 {
     margin-bottom: 16px;
 }
 
+.account-limit {
+    font-size: 1.25rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
 .apex .account-count {
     color: var(--accent-orange);
 }
