@@ -13,6 +13,14 @@
             <p class="subtitle">Daily Goals & Account Tracker</p>
         </header>
 
+        <nav class="tab-nav">
+            <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+            <button class="tab-btn" data-tab="money">Money</button>
+            <button class="tab-btn" data-tab="projections">Projections</button>
+            <button class="tab-btn" data-tab="history">Stats & Log</button>
+        </nav>
+
+        <div class="tab-content active" id="tab-dashboard">
         <section class="daily-goals">
             <h2>📋 Today's Tasks</h2>
             <div id="daily-tasks" class="task-list"></div>
@@ -81,7 +89,9 @@
                 </div>
             </div>
         </section>
+        </div>
 
+        <div class="tab-content" id="tab-money">
         <section class="settings">
             <h2>⚙️ Settings</h2>
             <div class="settings-card">
@@ -152,7 +162,9 @@
                 <div id="expense-list"></div>
             </div>
         </section>
+        </div>
 
+        <div class="tab-content" id="tab-projections">
         <section class="simulator">
             <h2>🔮 Projections Calendar</h2>
             <div class="simulator-card">
@@ -205,7 +217,9 @@
                 <div class="calendar-summary" id="calendar-summary"></div>
             </div>
         </section>
+        </div>
 
+        <div class="tab-content" id="tab-history">
         <section class="stats">
             <h2>📊 Statistics</h2>
             <div class="stats-grid">
@@ -233,6 +247,7 @@
             <div id="daily-log" class="log-container"></div>
             <button onclick="saveDay()" class="save-btn">Save Today's Progress</button>
         </section>
+        </div>
     </div>
 
     <script src="app.js"></script>

@@ -616,8 +616,34 @@ function render() {
     renderDailyLog();
 }
 
+// Tab navigation
+function initTabs() {
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tabId = btn.dataset.tab;
+
+            // Remove active from all
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
+
+            // Add active to clicked
+            btn.classList.add('active');
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+
+            // Re-render calendar when switching to projections tab
+            if (tabId === 'projections') {
+                renderCalendar();
+            }
+        });
+    });
+}
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+    initTabs();
     loadState();
     initSimulator();
 });
