@@ -508,51 +508,27 @@ function renderCalendar() {
     // Calculate market days from today to start of selected month
     if (firstDay > today) {
         const daysToStart = getMarketDaysCount(today, new Date(firstDay.getTime() - 86400000));
+        // Pre-month calculation
         for (let i = 0; i < daysToStart; i++) {
-            // Add apex expense and account if under limit
-            if (cumulativeApexPassed < ACCOUNT_LIMITS.apex) {
-                cumulativeExpenses += state.costs.apexEval;
-                if (Math.random() < passRate) {
-                    cumulativeApexPassed++;
-                    cumulativeExpenses += state.costs.apexActivation;
-                }
-            }
-            // Add lucid expense and account if under limit
-            if (cumulativeLucidPassed < ACCOUNT_LIMITS.lucid) {
-                cumulativeExpenses += state.costs.lucidEval;
-                if (Math.random() < passRate) {
-                    cumulativeLucidPassed++;
-                }
-            }
-        }
-        // Reset random - use deterministic calculation instead
-        cumulativeApexPassed = currentApexPassed;
-        cumulativeLucidPassed = currentLucidPassed;
-        cumulativeExpenses = currentStats.totalSpent;
-
-        // Deterministic pre-month calculation
-        for (let i = 0; i < daysToStart; i++) {
-            const canBuyApex = cumulativeApexPassed < ACCOUNT_LIMITS.apex;
-            const canBuyLucid = cumulativeLucidPassed < ACCOUNT_LIMITS.lucid;
+            // Stop buying when we've PASSED the limit (using floor to count actual funded accounts)
+            const canBuyApex = Math.floor(cumulativeApexPassed) < ACCOUNT_LIMITS.apex;
+            const canBuyLucid = Math.floor(cumulativeLucidPassed) < ACCOUNT_LIMITS.lucid;
 
             if (canBuyApex) {
                 cumulativeExpenses += state.costs.apexEval;
-                const newApex = passRate;
-                if (cumulativeApexPassed + newApex <= ACCOUNT_LIMITS.apex) {
-                    cumulativeApexPassed += newApex;
-                    cumulativeExpenses += passRate * state.costs.apexActivation;
-                } else {
-                    const remaining = ACCOUNT_LIMITS.apex - cumulativeApexPassed;
+                cumulativeApexPassed += passRate;
+                // Cap at limit
+                if (cumulativeApexPassed > ACCOUNT_LIMITS.apex) {
                     cumulativeApexPassed = ACCOUNT_LIMITS.apex;
-                    cumulativeExpenses += remaining * state.costs.apexActivation;
                 }
+                // Activation cost for newly passed account
+                cumulativeExpenses += passRate * state.costs.apexActivation;
             }
             if (canBuyLucid) {
                 cumulativeExpenses += state.costs.lucidEval;
-                const newLucid = passRate;
-                if (cumulativeLucidPassed + newLucid <= ACCOUNT_LIMITS.lucid) {
-                    cumulativeLucidPassed += newLucid;
-                }  else {
+                cumulativeLucidPassed += passRate;
+                // Cap at limit
+                if (cumulativeLucidPassed > ACCOUNT_LIMITS.lucid) {
                     cumulativeLucidPassed = ACCOUNT_LIMITS.lucid;
                 }
             }
@@ -582,27 +558,22 @@ function renderCalendar() {
 
                 // Calculate cumulative stats for this day
                 if (isMarket && !isPast) {
-                    const canBuyApex = cumulativeApexPassed < ACCOUNT_LIMITS.apex;
-                    const canBuyLucid = cumulativeLucidPassed < ACCOUNT_LIMITS.lucid;
+                    // Stop buying when we've PASSED the limit (using floor to count actual funded accounts)
+                    const canBuyApex = Math.floor(cumulativeApexPassed) < ACCOUNT_LIMITS.apex;
+                    const canBuyLucid = Math.floor(cumulativeLucidPassed) < ACCOUNT_LIMITS.lucid;
 
                     if (canBuyApex) {
                         cumulativeExpenses += state.costs.apexEval;
-                        const newApex = passRate;
-                        if (cumulativeApexPassed + newApex <= ACCOUNT_LIMITS.apex) {
-                            cumulativeApexPassed += newApex;
-                            cumulativeExpenses += passRate * state.costs.apexActivation;
-                        } else {
-                            const remaining = ACCOUNT_LIMITS.apex - cumulativeApexPassed;
+                        cumulativeApexPassed += passRate;
+                        if (cumulativeApexPassed > ACCOUNT_LIMITS.apex) {
                             cumulativeApexPassed = ACCOUNT_LIMITS.apex;
-                            cumulativeExpenses += remaining * state.costs.apexActivation;
                         }
+                        cumulativeExpenses += passRate * state.costs.apexActivation;
                     }
                     if (canBuyLucid) {
                         cumulativeExpenses += state.costs.lucidEval;
-                        const newLucid = passRate;
-                        if (cumulativeLucidPassed + newLucid <= ACCOUNT_LIMITS.lucid) {
-                            cumulativeLucidPassed += newLucid;
-                        } else {
+                        cumulativeLucidPassed += passRate;
+                        if (cumulativeLucidPassed > ACCOUNT_LIMITS.lucid) {
                             cumulativeLucidPassed = ACCOUNT_LIMITS.lucid;
                         }
                     }
