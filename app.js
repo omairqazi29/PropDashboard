@@ -44,7 +44,8 @@ const state = {
         apexActivation: 65,
         lucidEval: 80,
         payoutEstimate: 2000
-    }
+    },
+    payoutStartDate: '2026-01' // YYYY-MM format
 };
 
 // Load state from Supabase (fallback to localStorage)
@@ -83,6 +84,8 @@ async function loadState() {
     // Ensure new cost fields exist
     if (!state.costs.apexActivation) state.costs.apexActivation = 65;
     if (!state.costs.payoutEstimate) state.costs.payoutEstimate = 2000;
+    // Ensure payout start date exists
+    if (!state.payoutStartDate) state.payoutStartDate = '2026-01';
 
     renderSettings();
     render();
@@ -94,6 +97,14 @@ function renderSettings() {
     document.getElementById('cost-apex-activation').value = state.costs.apexActivation;
     document.getElementById('cost-lucid-eval').value = state.costs.lucidEval;
     document.getElementById('cost-payout-estimate').value = state.costs.payoutEstimate;
+    document.getElementById('payout-start-date').value = state.payoutStartDate;
+}
+
+// Update payout start date
+function updatePayoutStartDate(value) {
+    state.payoutStartDate = value;
+    saveState();
+    renderCalendar();
 }
 
 // Update cost setting
@@ -531,6 +542,15 @@ function getMarketDaysCount(startDate, endDate) {
     return count;
 }
 
+// Check if payouts are available for a given month/year
+function canReceivePayouts(year, month) {
+    const [payoutYear, payoutMonth] = state.payoutStartDate.split('-').map(Number);
+    // Compare year and month (month is 0-indexed in Date but 1-indexed in input)
+    if (year > payoutYear) return true;
+    if (year === payoutYear && month >= payoutMonth - 1) return true;
+    return false;
+}
+
 // Render calendar
 function renderCalendar() {
     const month = parseInt(document.getElementById('sim-month').value);
@@ -545,6 +565,9 @@ function renderCalendar() {
     const lastDay = new Date(year, month + 1, 0);
     const startDayOfWeek = firstDay.getDay();
     const daysInMonth = lastDay.getDate();
+
+    // Check if this month is eligible for payouts
+    const payoutsEnabled = canReceivePayouts(year, month);
 
     // Current accounts and expenses
     const currentApexPassed = state.accounts.apex.filter(a => a.status === 'passed').length;
@@ -635,7 +658,7 @@ function renderCalendar() {
                 }
 
                 const totalAccounts = Math.floor(cumulativeApexPassed) + Math.floor(cumulativeLucidPassed);
-                const totalPayout = totalAccounts * payoutPerAccount;
+                const totalPayout = payoutsEnabled ? totalAccounts * payoutPerAccount : 0;
 
                 calendarHTML += `
                     <div class="${classes}">
@@ -648,7 +671,9 @@ function renderCalendar() {
                                 </div>
                                 <div class="stat-row">
                                     <span class="stat-label">Pay</span>
-                                    <span class="stat-value payout">$${(totalPayout/1000).toFixed(1)}k</span>
+                                    <span class="stat-value payout ${!payoutsEnabled ? 'disabled' : ''}">
+                                        ${payoutsEnabled ? '$' + (totalPayout/1000).toFixed(1) + 'k' : '-'}
+                                    </span>
                                 </div>
                             </div>
                         ` : ''}
@@ -677,11 +702,14 @@ function renderCalendar() {
     const finalLucidPassed = Math.floor(cumulativeLucidPassed);
     const finalTotalAccounts = finalApexPassed + finalLucidPassed;
     const finalTotalExpenses = cumulativeExpenses;
-    const finalPayout = finalTotalAccounts * payoutPerAccount;
+    const finalPayout = payoutsEnabled ? finalTotalAccounts * payoutPerAccount : 0;
     const netProfit = finalPayout - finalTotalExpenses;
 
     // Render summary
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const [payoutYear, payoutMonth] = state.payoutStartDate.split('-').map(Number);
+    const payoutStartLabel = `${monthNames[payoutMonth - 1]} ${payoutYear}`;
+
     document.getElementById('calendar-summary').innerHTML = `
         <div class="summary-item">
             <div class="label">End of ${monthNames[month]}</div>
@@ -692,8 +720,10 @@ function renderCalendar() {
             <div class="value red">$${finalTotalExpenses.toLocaleString()}</div>
         </div>
         <div class="summary-item">
-            <div class="label">Potential Payout</div>
-            <div class="value green">$${finalPayout.toLocaleString()}</div>
+            <div class="label">Potential Payout${!payoutsEnabled ? ' (starts ' + payoutStartLabel + ')' : ''}</div>
+            <div class="value ${payoutsEnabled ? 'green' : 'muted'}">
+                ${payoutsEnabled ? '$' + finalPayout.toLocaleString() : '$0'}
+            </div>
         </div>
         <div class="summary-item">
             <div class="label">Net Profit</div>

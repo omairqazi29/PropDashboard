@@ -887,6 +887,11 @@ section h2 {
 .summary-item .value.red { color: var(--accent-red); }
 .summary-item .value.purple { color: var(--accent-purple); }
 .summary-item .value.blue { color: var(--accent-blue); }
+.summary-item .value.muted { color: var(--text-muted); }
+
+.calendar-day .stat-value.disabled {
+    color: var(--text-muted);
+}
 
 @media (max-width: 768px) {
     .calendar-day {
