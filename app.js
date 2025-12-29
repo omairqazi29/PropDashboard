@@ -81,6 +81,14 @@ function saveState() {
     localStorage.setItem('propDashboard', JSON.stringify(state));
 }
 
+// Reset all data
+function resetData() {
+    if (confirm('Are you sure you want to reset ALL data? This cannot be undone.')) {
+        localStorage.removeItem('propDashboard');
+        location.reload();
+    }
+}
+
 // Generate daily tasks based on goals
 function generateDailyTasks() {
     const tasks = [
