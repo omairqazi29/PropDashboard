@@ -423,167 +423,188 @@ function saveDay() {
     alert('Day saved! Keep grinding! 💪');
 }
 
-// Get market open days (weekdays, excluding major US holidays)
-function getMarketDays(startDate, endDate) {
-    const holidays2025 = [
-        '2025-01-01', // New Year's Day
-        '2025-01-20', // MLK Day
-        '2025-02-17', // Presidents Day
-        '2025-04-18', // Good Friday
-        '2025-05-26', // Memorial Day
-        '2025-06-19', // Juneteenth
-        '2025-07-04', // Independence Day
-        '2025-09-01', // Labor Day
-        '2025-11-27', // Thanksgiving
-        '2025-12-25'  // Christmas
-    ];
+// US Market holidays
+const holidays = {
+    2025: ['2025-01-01', '2025-01-20', '2025-02-17', '2025-04-18', '2025-05-26', '2025-06-19', '2025-07-04', '2025-09-01', '2025-11-27', '2025-12-25'],
+    2026: ['2026-01-01', '2026-01-19', '2026-02-16', '2026-04-03', '2026-05-25', '2026-06-19', '2026-07-03', '2026-09-07', '2026-11-26', '2026-12-25']
+};
 
-    let marketDays = 0;
+// Check if a date is a market day
+function isMarketDay(date) {
+    const dayOfWeek = date.getDay();
+    if (dayOfWeek === 0 || dayOfWeek === 6) return false;
+
+    const dateStr = date.toISOString().split('T')[0];
+    const year = date.getFullYear();
+    const yearHolidays = holidays[year] || [];
+
+    return !yearHolidays.includes(dateStr);
+}
+
+// Check if date is a holiday
+function isHoliday(date) {
+    const dateStr = date.toISOString().split('T')[0];
+    const year = date.getFullYear();
+    const yearHolidays = holidays[year] || [];
+    return yearHolidays.includes(dateStr);
+}
+
+// Get market days count between two dates
+function getMarketDaysCount(startDate, endDate) {
+    let count = 0;
     const current = new Date(startDate);
     const end = new Date(endDate);
 
     while (current <= end) {
-        const dayOfWeek = current.getDay();
-        const dateStr = current.toISOString().split('T')[0];
-
-        // Check if weekday and not a holiday
-        if (dayOfWeek !== 0 && dayOfWeek !== 6 && !holidays2025.includes(dateStr)) {
-            marketDays++;
-        }
-
+        if (isMarketDay(current)) count++;
         current.setDate(current.getDate() + 1);
     }
-
-    return marketDays;
+    return count;
 }
 
-// Run projection simulation
-function runSimulation() {
-    const targetDateInput = document.getElementById('sim-target-date').value;
+// Render calendar
+function renderCalendar() {
+    const month = parseInt(document.getElementById('sim-month').value);
+    const year = parseInt(document.getElementById('sim-year').value);
     const passRate = parseFloat(document.getElementById('sim-pass-rate').value) / 100;
     const payoutPerAccount = parseFloat(document.getElementById('sim-payout').value);
 
-    if (!targetDateInput) {
-        alert('Please select a target date');
-        return;
-    }
-
     const today = new Date();
-    const targetDate = new Date(targetDateInput);
+    today.setHours(0, 0, 0, 0);
 
-    if (targetDate <= today) {
-        alert('Target date must be in the future');
-        return;
-    }
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startDayOfWeek = firstDay.getDay();
+    const daysInMonth = lastDay.getDate();
 
-    // Calculate market days from today to target
-    const marketDays = getMarketDays(today, targetDate);
-
-    // Current accounts
+    // Current accounts and expenses
     const currentApexPassed = state.accounts.apex.filter(a => a.status === 'passed').length;
     const currentLucidPassed = state.accounts.lucid.filter(a => a.status === 'passed').length;
     const currentTotalPassed = currentApexPassed + currentLucidPassed;
-
-    // Daily strategy: 1 Apex eval + 1 Lucid eval per market day
-    const apexEvalsBought = marketDays;
-    const lucidEvalsBought = marketDays;
-
-    // Calculate new accounts passed based on pass rate
-    const newApexPassed = Math.floor(apexEvalsBought * passRate);
-    const newLucidPassed = Math.floor(lucidEvalsBought * passRate);
-    const totalNewPassed = newApexPassed + newLucidPassed;
-
-    // Calculate expenses
-    const apexEvalCost = apexEvalsBought * state.costs.apexEval;
-    const lucidEvalCost = lucidEvalsBought * state.costs.lucidEval;
-    const activationCost = newApexPassed * state.costs.apexActivation; // Only Apex needs activation
-    const totalNewExpenses = apexEvalCost + lucidEvalCost + activationCost;
-
-    // Current expenses
     const currentStats = calculateMoneyStats();
-    const totalExpenses = currentStats.totalSpent + totalNewExpenses;
 
-    // Total accounts by target date
-    const projectedApexPassed = currentApexPassed + newApexPassed;
-    const projectedLucidPassed = currentLucidPassed + newLucidPassed;
-    const projectedTotalPassed = currentTotalPassed + totalNewPassed;
+    let calendarHTML = '';
+    let dayCounter = 1;
 
-    // Calculate payouts (assuming all passed accounts get payout)
-    const totalPayouts = projectedTotalPassed * payoutPerAccount;
-    const netProfit = totalPayouts - totalExpenses;
+    // Track cumulative stats
+    let cumulativeMarketDays = 0;
+    let cumulativeNewPassed = 0;
+    let cumulativeExpenses = currentStats.totalSpent;
 
-    // Render results
-    const resultsContainer = document.getElementById('sim-results');
-    resultsContainer.innerHTML = `
-        <div class="sim-results-grid">
-            <div class="sim-result-item">
-                <h4>Market Days</h4>
-                <span class="value blue">${marketDays}</span>
-            </div>
-            <div class="sim-result-item">
-                <h4>New Accounts Passed</h4>
-                <span class="value green">+${totalNewPassed}</span>
-            </div>
-            <div class="sim-result-item">
-                <h4>Total Passed by ${targetDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</h4>
-                <span class="value purple">${projectedTotalPassed}</span>
-            </div>
-            <div class="sim-result-item">
-                <h4>Total Expenses</h4>
-                <span class="value red">$${totalExpenses.toLocaleString()}</span>
-            </div>
-            <div class="sim-result-item">
-                <h4>Total Payouts</h4>
-                <span class="value green">$${totalPayouts.toLocaleString()}</span>
-            </div>
-            <div class="sim-result-item">
-                <h4>Net Profit</h4>
-                <span class="value ${netProfit >= 0 ? 'green' : 'red'}">$${netProfit.toLocaleString()}</span>
-            </div>
+    // Calculate market days from today to start of selected month
+    if (firstDay > today) {
+        const daysToStart = getMarketDaysCount(today, new Date(firstDay.getTime() - 86400000));
+        cumulativeMarketDays = daysToStart;
+        const newPassedToStart = Math.floor(daysToStart * 2 * passRate);
+        const newApexToStart = Math.floor(daysToStart * passRate);
+        cumulativeNewPassed = newPassedToStart;
+        cumulativeExpenses += daysToStart * (state.costs.apexEval + state.costs.lucidEval) + newApexToStart * state.costs.apexActivation;
+    }
+
+    // Generate calendar grid (6 rows max)
+    for (let row = 0; row < 6; row++) {
+        for (let col = 0; col < 7; col++) {
+            const cellIndex = row * 7 + col;
+
+            if (cellIndex < startDayOfWeek || dayCounter > daysInMonth) {
+                calendarHTML += '<div class="calendar-day empty"></div>';
+            } else {
+                const currentDate = new Date(year, month, dayCounter);
+                const isWeekend = col === 0 || col === 6;
+                const isHolidayDay = isHoliday(currentDate);
+                const isToday = currentDate.getTime() === today.getTime();
+                const isPast = currentDate < today;
+                const isMarket = isMarketDay(currentDate);
+
+                let classes = 'calendar-day';
+                if (isWeekend) classes += ' weekend';
+                if (isHolidayDay) classes += ' holiday';
+                if (isToday) classes += ' today';
+                if (isPast) classes += ' past';
+
+                // Calculate cumulative stats for this day
+                if (isMarket && !isPast) {
+                    cumulativeMarketDays++;
+                    const dailyNewPassed = 2 * passRate; // 1 apex + 1 lucid
+                    cumulativeNewPassed += dailyNewPassed;
+                    cumulativeExpenses += state.costs.apexEval + state.costs.lucidEval;
+                    // Add activation cost for passed apex accounts
+                    cumulativeExpenses += passRate * state.costs.apexActivation;
+                }
+
+                const totalAccounts = currentTotalPassed + Math.floor(cumulativeNewPassed);
+                const totalPayout = totalAccounts * payoutPerAccount;
+
+                calendarHTML += `
+                    <div class="${classes}">
+                        <span class="day-number">${dayCounter}</span>
+                        ${!isPast && !isWeekend ? `
+                            <div class="day-stats">
+                                <div class="stat-row">
+                                    <span class="stat-label">Accts</span>
+                                    <span class="stat-value accounts">${totalAccounts}</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">Pay</span>
+                                    <span class="stat-value payout">$${(totalPayout/1000).toFixed(1)}k</span>
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+
+                dayCounter++;
+            }
+        }
+        if (dayCounter > daysInMonth) break;
+    }
+
+    document.getElementById('calendar-grid').innerHTML = calendarHTML;
+
+    // Calculate end of month stats
+    const endOfMonth = new Date(year, month + 1, 0);
+    let marketDaysInMonth = 0;
+    const checkDate = new Date(Math.max(today.getTime(), firstDay.getTime()));
+    while (checkDate <= endOfMonth) {
+        if (isMarketDay(checkDate)) marketDaysInMonth++;
+        checkDate.setDate(checkDate.getDate() + 1);
+    }
+
+    // Total market days from today to end of month
+    const totalMarketDays = getMarketDaysCount(today, endOfMonth);
+    const totalNewPassed = Math.floor(totalMarketDays * 2 * passRate);
+    const totalNewApex = Math.floor(totalMarketDays * passRate);
+    const totalNewExpenses = totalMarketDays * (state.costs.apexEval + state.costs.lucidEval) + totalNewApex * state.costs.apexActivation;
+    const finalTotalAccounts = currentTotalPassed + totalNewPassed;
+    const finalTotalExpenses = currentStats.totalSpent + totalNewExpenses;
+    const finalPayout = finalTotalAccounts * payoutPerAccount;
+    const netProfit = finalPayout - finalTotalExpenses;
+
+    // Render summary
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    document.getElementById('calendar-summary').innerHTML = `
+        <div class="summary-item">
+            <div class="label">End of ${monthNames[month]}</div>
+            <div class="value purple">${finalTotalAccounts} accounts</div>
         </div>
-        <div class="sim-breakdown">
-            <h4>Expense Breakdown (New)</h4>
-            <div class="sim-breakdown-row">
-                <span>Apex Evals (${apexEvalsBought} × $${state.costs.apexEval})</span>
-                <span>$${apexEvalCost.toLocaleString()}</span>
-            </div>
-            <div class="sim-breakdown-row">
-                <span>Lucid Evals (${lucidEvalsBought} × $${state.costs.lucidEval})</span>
-                <span>$${lucidEvalCost.toLocaleString()}</span>
-            </div>
-            <div class="sim-breakdown-row">
-                <span>Apex Activations (${newApexPassed} × $${state.costs.apexActivation})</span>
-                <span>$${activationCost.toLocaleString()}</span>
-            </div>
-            <div class="sim-breakdown-row">
-                <span>New Expenses Total</span>
-                <span>$${totalNewExpenses.toLocaleString()}</span>
-            </div>
+        <div class="summary-item">
+            <div class="label">Total Expenses</div>
+            <div class="value red">$${finalTotalExpenses.toLocaleString()}</div>
         </div>
-        <div class="sim-breakdown">
-            <h4>Account Projections</h4>
-            <div class="sim-breakdown-row">
-                <span>Apex Accounts (current + new)</span>
-                <span>${currentApexPassed} + ${newApexPassed} = ${projectedApexPassed}</span>
-            </div>
-            <div class="sim-breakdown-row">
-                <span>Lucid Accounts (current + new)</span>
-                <span>${currentLucidPassed} + ${newLucidPassed} = ${projectedLucidPassed}</span>
-            </div>
-            <div class="sim-breakdown-row">
-                <span>Total Passed Accounts</span>
-                <span>${projectedTotalPassed}</span>
-            </div>
+        <div class="summary-item">
+            <div class="label">Potential Payout</div>
+            <div class="value green">$${finalPayout.toLocaleString()}</div>
+        </div>
+        <div class="summary-item">
+            <div class="label">Net Profit</div>
+            <div class="value ${netProfit >= 0 ? 'green' : 'red'}">$${netProfit.toLocaleString()}</div>
         </div>
     `;
 }
 
-// Set default simulation date to end of February 2025
+// Initialize calendar
 function initSimulator() {
-    const simDateInput = document.getElementById('sim-target-date');
-    if (simDateInput) {
-        simDateInput.value = '2025-02-28';
-    }
+    renderCalendar();
 }
 
 // Main render function

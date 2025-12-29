@@ -154,26 +154,55 @@
         </section>
 
         <section class="simulator">
-            <h2>🔮 Projections Simulator</h2>
+            <h2>🔮 Projections Calendar</h2>
             <div class="simulator-card">
                 <div class="simulator-inputs">
                     <div class="sim-input-group">
-                        <label>Target Date</label>
-                        <input type="date" id="sim-target-date">
+                        <label>Month</label>
+                        <select id="sim-month" onchange="renderCalendar()">
+                            <option value="0">January</option>
+                            <option value="1" selected>February</option>
+                            <option value="2">March</option>
+                            <option value="3">April</option>
+                            <option value="4">May</option>
+                            <option value="5">June</option>
+                            <option value="6">July</option>
+                            <option value="7">August</option>
+                            <option value="8">September</option>
+                            <option value="9">October</option>
+                            <option value="10">November</option>
+                            <option value="11">December</option>
+                        </select>
+                    </div>
+                    <div class="sim-input-group">
+                        <label>Year</label>
+                        <select id="sim-year" onchange="renderCalendar()">
+                            <option value="2025">2025</option>
+                            <option value="2026" selected>2026</option>
+                        </select>
                     </div>
                     <div class="sim-input-group">
                         <label>Pass Rate (%)</label>
-                        <input type="number" id="sim-pass-rate" value="50" min="0" max="100">
+                        <input type="number" id="sim-pass-rate" value="50" min="0" max="100" onchange="renderCalendar()">
                     </div>
                     <div class="sim-input-group">
-                        <label>Payout per Account ($)</label>
-                        <input type="number" id="sim-payout" value="500" step="100">
+                        <label>Payout/Account ($)</label>
+                        <input type="number" id="sim-payout" value="500" step="100" onchange="renderCalendar()">
                     </div>
-                    <button onclick="runSimulation()" class="sim-btn">Run Simulation</button>
                 </div>
-                <div class="simulator-results" id="sim-results">
-                    <p style="color: #666; text-align: center;">Set a target date and run simulation</p>
+                <div class="calendar-container" id="calendar-container">
+                    <div class="calendar-header">
+                        <div class="day-label">Sun</div>
+                        <div class="day-label">Mon</div>
+                        <div class="day-label">Tue</div>
+                        <div class="day-label">Wed</div>
+                        <div class="day-label">Thu</div>
+                        <div class="day-label">Fri</div>
+                        <div class="day-label">Sat</div>
+                    </div>
+                    <div class="calendar-grid" id="calendar-grid"></div>
                 </div>
+                <div class="calendar-summary" id="calendar-summary"></div>
             </div>
         </section>
 
