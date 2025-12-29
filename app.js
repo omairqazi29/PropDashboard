@@ -1,5 +1,10 @@
 // Prop Trading Dashboard - Main Application
 
+// Supabase Configuration
+const SUPABASE_URL = 'https://idbazylwzyraeabbocyp.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_EeqQuu0iN1P1yV-VkFeCaw_y93qD5ps';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 // Initial State
 const state = {
     accounts: {
@@ -42,18 +47,43 @@ const state = {
     }
 };
 
-// Load state from localStorage
-function loadState() {
-    const saved = localStorage.getItem('propDashboard');
-    if (saved) {
-        const parsed = JSON.parse(saved);
-        Object.assign(state, parsed);
-        // Ensure expenses array exists for older saves
-        if (!state.expenses) state.expenses = [];
-        // Ensure new cost fields exist
-        if (!state.costs.apexActivation) state.costs.apexActivation = 65;
-        if (!state.costs.payoutEstimate) state.costs.payoutEstimate = 2000;
+// Load state from Supabase (fallback to localStorage)
+async function loadState() {
+    let loaded = false;
+
+    // Try loading from Supabase first
+    try {
+        const { data, error } = await supabase
+            .from('dashboard_state')
+            .select('state')
+            .eq('id', 'default')
+            .single();
+
+        if (data && data.state && Object.keys(data.state).length > 0) {
+            Object.assign(state, data.state);
+            loaded = true;
+            console.log('Loaded from Supabase');
+        }
+    } catch (err) {
+        console.error('Supabase load error:', err);
     }
+
+    // Fallback to localStorage
+    if (!loaded) {
+        const saved = localStorage.getItem('propDashboard');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            Object.assign(state, parsed);
+            console.log('Loaded from localStorage');
+        }
+    }
+
+    // Ensure expenses array exists for older saves
+    if (!state.expenses) state.expenses = [];
+    // Ensure new cost fields exist
+    if (!state.costs.apexActivation) state.costs.apexActivation = 65;
+    if (!state.costs.payoutEstimate) state.costs.payoutEstimate = 2000;
+
     renderSettings();
     render();
 }
@@ -76,15 +106,32 @@ function updateCost(key, value) {
     }
 }
 
-// Save state to localStorage
-function saveState() {
+// Save state to localStorage and Supabase
+async function saveState() {
     localStorage.setItem('propDashboard', JSON.stringify(state));
+
+    // Sync to Supabase
+    try {
+        await supabase
+            .from('dashboard_state')
+            .upsert({ id: 'default', state: state, updated_at: new Date().toISOString() });
+    } catch (err) {
+        console.error('Supabase sync error:', err);
+    }
 }
 
 // Reset all data
-function resetData() {
+async function resetData() {
     if (confirm('Are you sure you want to reset ALL data? This cannot be undone.')) {
         localStorage.removeItem('propDashboard');
+        // Clear Supabase
+        try {
+            await supabase
+                .from('dashboard_state')
+                .upsert({ id: 'default', state: {}, updated_at: new Date().toISOString() });
+        } catch (err) {
+            console.error('Supabase reset error:', err);
+        }
         location.reload();
     }
 }
