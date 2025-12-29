@@ -500,19 +500,63 @@ function renderCalendar() {
     let calendarHTML = '';
     let dayCounter = 1;
 
-    // Track cumulative stats
-    let cumulativeMarketDays = 0;
-    let cumulativeNewPassed = 0;
+    // Track cumulative stats separately for apex and lucid
+    let cumulativeApexPassed = currentApexPassed;
+    let cumulativeLucidPassed = currentLucidPassed;
     let cumulativeExpenses = currentStats.totalSpent;
 
     // Calculate market days from today to start of selected month
     if (firstDay > today) {
         const daysToStart = getMarketDaysCount(today, new Date(firstDay.getTime() - 86400000));
-        cumulativeMarketDays = daysToStart;
-        const newPassedToStart = Math.floor(daysToStart * 2 * passRate);
-        const newApexToStart = Math.floor(daysToStart * passRate);
-        cumulativeNewPassed = newPassedToStart;
-        cumulativeExpenses += daysToStart * (state.costs.apexEval + state.costs.lucidEval) + newApexToStart * state.costs.apexActivation;
+        for (let i = 0; i < daysToStart; i++) {
+            // Add apex expense and account if under limit
+            if (cumulativeApexPassed < ACCOUNT_LIMITS.apex) {
+                cumulativeExpenses += state.costs.apexEval;
+                if (Math.random() < passRate) {
+                    cumulativeApexPassed++;
+                    cumulativeExpenses += state.costs.apexActivation;
+                }
+            }
+            // Add lucid expense and account if under limit
+            if (cumulativeLucidPassed < ACCOUNT_LIMITS.lucid) {
+                cumulativeExpenses += state.costs.lucidEval;
+                if (Math.random() < passRate) {
+                    cumulativeLucidPassed++;
+                }
+            }
+        }
+        // Reset random - use deterministic calculation instead
+        cumulativeApexPassed = currentApexPassed;
+        cumulativeLucidPassed = currentLucidPassed;
+        cumulativeExpenses = currentStats.totalSpent;
+
+        // Deterministic pre-month calculation
+        for (let i = 0; i < daysToStart; i++) {
+            const canBuyApex = cumulativeApexPassed < ACCOUNT_LIMITS.apex;
+            const canBuyLucid = cumulativeLucidPassed < ACCOUNT_LIMITS.lucid;
+
+            if (canBuyApex) {
+                cumulativeExpenses += state.costs.apexEval;
+                const newApex = passRate;
+                if (cumulativeApexPassed + newApex <= ACCOUNT_LIMITS.apex) {
+                    cumulativeApexPassed += newApex;
+                    cumulativeExpenses += passRate * state.costs.apexActivation;
+                } else {
+                    const remaining = ACCOUNT_LIMITS.apex - cumulativeApexPassed;
+                    cumulativeApexPassed = ACCOUNT_LIMITS.apex;
+                    cumulativeExpenses += remaining * state.costs.apexActivation;
+                }
+            }
+            if (canBuyLucid) {
+                cumulativeExpenses += state.costs.lucidEval;
+                const newLucid = passRate;
+                if (cumulativeLucidPassed + newLucid <= ACCOUNT_LIMITS.lucid) {
+                    cumulativeLucidPassed += newLucid;
+                }  else {
+                    cumulativeLucidPassed = ACCOUNT_LIMITS.lucid;
+                }
+            }
+        }
     }
 
     // Generate calendar grid (6 rows max)
@@ -538,16 +582,33 @@ function renderCalendar() {
 
                 // Calculate cumulative stats for this day
                 if (isMarket && !isPast) {
-                    cumulativeMarketDays++;
-                    const dailyNewPassed = 2 * passRate; // 1 apex + 1 lucid
-                    cumulativeNewPassed += dailyNewPassed;
-                    cumulativeExpenses += state.costs.apexEval + state.costs.lucidEval;
-                    // Add activation cost for passed apex accounts
-                    cumulativeExpenses += passRate * state.costs.apexActivation;
+                    const canBuyApex = cumulativeApexPassed < ACCOUNT_LIMITS.apex;
+                    const canBuyLucid = cumulativeLucidPassed < ACCOUNT_LIMITS.lucid;
+
+                    if (canBuyApex) {
+                        cumulativeExpenses += state.costs.apexEval;
+                        const newApex = passRate;
+                        if (cumulativeApexPassed + newApex <= ACCOUNT_LIMITS.apex) {
+                            cumulativeApexPassed += newApex;
+                            cumulativeExpenses += passRate * state.costs.apexActivation;
+                        } else {
+                            const remaining = ACCOUNT_LIMITS.apex - cumulativeApexPassed;
+                            cumulativeApexPassed = ACCOUNT_LIMITS.apex;
+                            cumulativeExpenses += remaining * state.costs.apexActivation;
+                        }
+                    }
+                    if (canBuyLucid) {
+                        cumulativeExpenses += state.costs.lucidEval;
+                        const newLucid = passRate;
+                        if (cumulativeLucidPassed + newLucid <= ACCOUNT_LIMITS.lucid) {
+                            cumulativeLucidPassed += newLucid;
+                        } else {
+                            cumulativeLucidPassed = ACCOUNT_LIMITS.lucid;
+                        }
+                    }
                 }
 
-                const maxAccounts = ACCOUNT_LIMITS.apex + ACCOUNT_LIMITS.lucid;
-                const totalAccounts = Math.min(currentTotalPassed + Math.floor(cumulativeNewPassed), maxAccounts);
+                const totalAccounts = Math.floor(cumulativeApexPassed) + Math.floor(cumulativeLucidPassed);
                 const totalPayout = totalAccounts * payoutPerAccount;
 
                 calendarHTML += `
@@ -585,14 +646,11 @@ function renderCalendar() {
         checkDate.setDate(checkDate.getDate() + 1);
     }
 
-    // Total market days from today to end of month
-    const totalMarketDays = getMarketDaysCount(today, endOfMonth);
-    const totalNewPassed = Math.floor(totalMarketDays * 2 * passRate);
-    const totalNewApex = Math.floor(totalMarketDays * passRate);
-    const totalNewExpenses = totalMarketDays * (state.costs.apexEval + state.costs.lucidEval) + totalNewApex * state.costs.apexActivation;
-    const maxAccounts = ACCOUNT_LIMITS.apex + ACCOUNT_LIMITS.lucid;
-    const finalTotalAccounts = Math.min(currentTotalPassed + totalNewPassed, maxAccounts);
-    const finalTotalExpenses = currentStats.totalSpent + totalNewExpenses;
+    // Calculate final stats using the cumulative values from calendar render
+    const finalApexPassed = Math.floor(cumulativeApexPassed);
+    const finalLucidPassed = Math.floor(cumulativeLucidPassed);
+    const finalTotalAccounts = finalApexPassed + finalLucidPassed;
+    const finalTotalExpenses = cumulativeExpenses;
     const finalPayout = finalTotalAccounts * payoutPerAccount;
     const netProfit = finalPayout - finalTotalExpenses;
 
